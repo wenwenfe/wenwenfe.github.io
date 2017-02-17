@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>pc/main.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -27,29 +27,74 @@
 
 <div id="main">
     
+    <h1 class="page-title">pc/main.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by liuyuxin on 2016/12/19.
+ */
 
+import {pcCreateLoginFactory} from "./Login.PC";
 
+let domain = location.host;
 
+try {
+    document.domain = "sogou.com";
+} catch (e) {
 
+}
 
+$(function () {
+    let login = pcCreateLoginFactory(domain);
+    /***
+     * 登录元素绑定
+     *
+     */
+    $(document).on('click', '#login, #s_login, .s_login', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let cb;
+        //默认登录刷新当前页， 如果有login_noreload则不刷新
+        if (!$(this).hasClass("login_noreload")) {
+            cb = function () {
+                location.reload(false);
+            }
+        }
+        login.doLogin(cb);
+        return false;
+    });
+    /***
+     * 退出登录元素绑定
+     *
+     */
+    $(document).on('click', '#logout, .logout, #s_logout,.sogou_logout', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        //点击目标带有href属性， 则退出成功后跳转到该url
+        let cb = $(this).attr("s_url");
+        login.doLoginOut(cb);
+        return false;
+    });
+});
 
-
-
-
-    
-
-
-    <section class="readme">
-        <article><h2>社区搜索部登录模块</h2><p>&gt;</p></article>
+/**
+ * PC操作登录实例
+ * @name WKSSO
+ * @global
+ * @type {module:PC/Login~Login}
+ * @see module:PC/Login~Login
+ */
+window.WKSSO = pcCreateLoginFactory(domain);
+</code></pre>
+        </article>
     </section>
-
-
 
 
 

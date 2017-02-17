@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>doLogout.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -27,29 +27,111 @@
 
 <div id="main">
     
+    <h1 class="page-title">doLogout.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @Author byran &lt;xujianliang@sogou-inc.com>
+ * C-Time 2016/12/20.
+ */
 
+/** @module doLogout */
+function doPTLoginOut(callback) {
+    if(typeof pt_logout !== 'undefined' &amp;&amp; typeof pt_logout.logoutQQCom === "function"){
+        pt_logout.logoutQQCom(function (code) {
+            //code: 0:失败；1：清除superkey,兼容旧版；2：清除superskey成功，且logout成功。
+            callback();
+        });
+    }else{
+        let loadScript;
+        let url = 'http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js';
+        loadScript = document.createElement('script');
+        loadScript.setAttribute('type', 'text/javascript');
+        loadScript.onload = loadScript.onreadystatechange = loadScript.onerror = function(){
+            if (loadScript.ready) {
+                return false;
+            }
+            if (!loadScript.readyState || loadScript.readyState == "loaded" || loadScript.readyState == 'complete') {
+                loadScript.ready = true;
+                if(typeof pt_logout !== 'undefined' &amp;&amp; typeof pt_logout.logoutQQCom === "function"){
+                    pt_logout.logoutQQCom(function (code) {
+                        //code: 0:失败；1：清除superkey,兼容旧版；2：清除superskey成功，且logout成功。
+                        callback();
+                    });
+                }
+            }
+        };
+        loadScript.setAttribute('src', url);
+        document.body.appendChild(loadScript);
+    }
+}
+/**
+ * 请求腾讯侧注销登录凭证， 这一步不可缺少， 否则p_key凭证依然可以在登录
+ * 调用腾讯PTLogin提供的JS通用退出登录方法
+ * 首先动态加载ptloginout脚本， 然后调用logoutQQCom方法
+ * @function
+ * @param callback
+ */
+exports.doPTLoginOut = doPTLoginOut;
 
+function doWKLoginOut(url, callback) {
+    let img = new Image();
+    callback = callback || location.href;
+    let callBackFunc = function() {
+        if (typeof callback === "function") {
+            callback();
+        } else if( !callback || (typeof callback === "string" &amp;&amp; callback.length)){
+            //如果callback为空或者跳转链接是改变hash地址， 执行刷新操作
+            if (!callback || location.href.split("#").shift() === callback.split("#").shift()) {
+                location.reload();
+            } else {
+                location.href = callback;
+            }
+        }
+    };
+    img.onload = function () {
+        callBackFunc();
+        img.onload = img.onerror = null;
+    };
+    //出错直接刷新页面？
+    img.onerror = function () {
+        callBackFunc();
+        img.onload = img.onerror = null;
+    };
+    img.src = url;
+}
+/**
+ * 请求搜狗侧业务注销登录cookie
+ * @function
+ * @param url 对应业务线的注销登录地址
+ * @param callback 请求发送成功的回调
+ */
+exports.doWKLoginOut = doWKLoginOut;
 
+function doLoginOut(url, callback){
+    doPTLoginOut(function () {
+        doWKLoginOut(url, callback);
+    })
+}
 
-
-
-
-
-
-    
-
-
-    <section class="readme">
-        <article><h2>社区搜索部登录模块</h2><p>&gt;</p></article>
+/**
+ * 注销登录凭证
+ * 1、先注销PTLogin登录凭证
+ * 2、注销搜狗侧登录凭证
+ * @function
+ * @param {string} url 搜狗侧对应业务线的注销登录地址
+ * @param {function} callback 注销后回调
+ */
+exports.doLoginOut = doLoginOut;</code></pre>
+        </article>
     </section>
-
-
 
 
 

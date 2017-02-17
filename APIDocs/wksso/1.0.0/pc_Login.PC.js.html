@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>pc/Login.PC.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="module-PC_Login_LoginDialog.html">LoginDialog</a><ul class='methods'><li data-type='method'><a href="module-PC_Login_LoginDialog.html#resize">resize</a></li><li data-type='method'><a href="module-PC_Login_LoginDialog.html#close">close</a></li></ul></li><li><a href="module-PC_Login-Login.html">Login</a><ul class='methods'><li data-type='method'><a href="module-PC_Login-Login.html#.generateLoginUrl">generateLoginUrl</a></li><li data-type='method'><a href="module-PC_Login-Login.html#.generateLoginOutUrl">generateLoginOutUrl</a></li><li data-type='method'><a href="module-PC_Login-Login.html#.ajaxLoginStateUrl">ajaxLoginStateUrl</a></li><li data-type='method'><a href="module-PC_Login-Login.html#doLogin">doLogin</a></li><li data-type='method'><a href="module-PC_Login-Login.html#doLoginOut">doLoginOut</a></li><li data-type='method'><a href="module-PC_Login-Login.html#openLoginDialog">openLoginDialog</a></li><li data-type='method'><a href="module-PC_Login-Login.html#autoCloseLoginDialog">autoCloseLoginDialog</a></li><li data-type='method'><a href="module-PC_Login-Login.html#checkLoginState">checkLoginState</a></li><li data-type='method'><a href="module-PC_Login-Login.html#insureLoginAction">insureLoginAction</a></li><li data-type='method'><a href="module-PC_Login-Login.html#appendCallbackList">appendCallbackList</a></li></ul></li><li><a href="module-Wap_Login-Login.html">Login</a><ul class='methods'><li data-type='method'><a href="module-Wap_Login-Login.html#.generateLoginUrl">generateLoginUrl</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#.generateLoginOutUrl">generateLoginOutUrl</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#.ajaxLoginStateUrl">ajaxLoginStateUrl</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#doLogin">doLogin</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#doLoginOut">doLoginOut</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#checkLoginState">checkLoginState</a></li><li data-type='method'><a href="module-Wap_Login-Login.html#insureLoginAction">insureLoginAction</a></li></ul></li></ul><h3>Modules</h3><ul><li><a href="module-doLogout.html">doLogout</a><ul class='methods'><li data-type='method'><a href="module-doLogout.html#.doPTLoginOut">doPTLoginOut</a></li><li data-type='method'><a href="module-doLogout.html#.doWKLoginOut">doWKLoginOut</a></li><li data-type='method'><a href="module-doLogout.html#.doLoginOut">doLoginOut</a></li></ul></li><li><a href="module-PC_Login.html">PC/Login</a><ul class='methods'><li data-type='method'><a href="module-PC_Login.html#.pcCreateLoginFactory">pcCreateLoginFactory</a></li></ul></li><li><a href="module-Wap_Login.html">Wap/Login</a><ul class='methods'><li data-type='method'><a href="module-Wap_Login.html#.wapCreateLoginFactory">wapCreateLoginFactory</a></li><li data-type='method'><a href="module-Wap_Login.html#.generateLoginUrl">generateLoginUrl</a></li><li data-type='method'><a href="module-Wap_Login.html#.generateLoginOutUrl">generateLoginOutUrl</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#WKSSO">WKSSO</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">pc/Login.PC.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @Author byran &lt;xujianliang@sogou-inc.com>
+ * C-Time 2016/12/14.
+ */
+
+/** @module PC/Login */
+import {doLoginOut} from "../doLogout.js";
+import "./login.dialog.css";
+
+/**
+ * 获取PTLogin登录链接.
+ * @ignore
+ * @param {string} s_url - PTLoginURL中s_url参数
+ * @returns {string}
+ */
+function getPTLoginURL(s_url) {
+    let daid = 210;
+    if (location.host.indexOf('wenwen.qq.com') > -1) {
+        daid = 387;
+    }
+    return 'http://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=6000201&amp;daid='+ daid +'&amp;hide_uin_tip=1&amp;style=20&amp;hide_close_icon=0&amp;pt_no_auth=1&amp;target=self&amp;qtarget=0&amp;hide_title_bar=1&amp;s_url=' + encodeURIComponent(s_url);
+}
+
+/**
+ * 参数配置对象
+ * @ignore
+ */
+let config = {
+    /**
+     * @property {string} loginReturnUrl - 点击登录后，ptlogin的回跳地址
+     */
+    loginReturnUrl: "http://wenwen.sogou.com/login/popLogin"
+};
+let $win = $(window);
+let win_width = $win.width();
+let win_height = $win.height();
+let _width = 622;
+let _height = 368;
+
+/***
+ * 登陆框封装类
+ */
+class LoginDialog {
+    /**
+     * @param {string} url - 完整的PTLoginURL
+     */
+    constructor(url) {
+        this.url = url;
+        let maxWidth = $(document.body).width() || $win.width();
+
+        if(!$('#login_iframe_container').length) {
+            let loginDialog = '&lt;div id="login_iframe_container" style="top:'+(win_height-_height)/2+'px;left:'+(win_width-_width)/2+'px;">' + '&lt;iframe id="login_iframe" src="' + this.url + '" scrolling="no" frameborder="0" width="622" height="366">&lt;/iframe>' + '&lt;/div>';
+            $('body').append('&lt;div id="login_mask" style="width:'+maxWidth+'px;height:100%;">&lt;/div>' + loginDialog);
+        }
+
+        let instance = this;
+        if (typeof window.postMessage !== 'undefined') {
+            /**
+             * 登录Iframe和parent间的通信
+             * @msg.origin
+             * @msg.data
+             * @msg.data.action
+             */
+            window.onmessage = function (event) {
+                try {
+                    var msg = event || window.event; // 兼容IE8
+                    var origin = msg.origin;
+                    if (origin.toLowerCase() != 'http://wenwen.sogou.com' &amp;&amp; origin.toLowerCase() != 'http://xui.ptlogin2.qq.com') {
+                        return false;
+                    }
+                    var data = JSON.parse(msg.data); // IE7 以下依赖 json.js
+                    switch (data.action) {
+                        case 'close':
+                            instance.close();
+                            break;
+                        case 'resize':
+                            instance.resize(data.width, data.height);
+                            $('#login_iframe').css({"width": data.width, "height": data.height});
+                            break;
+                    }
+                } catch (e) {
+                    console &amp;&amp; console.log(e)
+                }
+            }
+        }
+
+        let scrollTimer = -1;
+        $(window).on("resize", function (e) {
+            if (typeof scrollTimer == 'undefined') {
+                return false;
+            }
+
+            if (scrollTimer) {
+                clearTimeout(scrollTimer);
+            }
+
+            scrollTimer = setTimeout(function () {
+                $('#login_mask').css({
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                });
+                $('#login_iframe_container').css({
+                    top: (window.innerHeight - _height)/2 + 'px',
+                    left: (window.innerWidth - _width)/2 + 'px'
+                });
+            }, 250);
+        });
+    }
+
+    /**
+     * 重置登录框的size
+     * @param {number} width - 登录框的width
+     * @param {number} height - 登录框的height
+     */
+    resize(width, height) {
+        $('#login_iframe_container').css({
+            width: width,
+            height: height
+        })
+    }
+
+    /**
+     * 关闭登录框
+     */
+    close() {
+        $('#login_mask').remove();
+        $('#login_iframe_container').remove();
+    }
+}
+
+export
+/**
+ * 登录功能封装类
+ * @class
+ */
+class Login {
+    /**
+     * @param {string} domain - 生产的Login对象host
+     */
+    constructor(domain) {
+        this.loginDialog = null;//登录对话框对象
+        this.domain = domain;//生产的Login对象host
+        this.callbackList = [];//登录后的回调函数List
+    }
+
+    /**
+     * 合成弹窗Iframe或者登录页的URL
+     * wenwen域可以直接打开ptlogin地址
+     * 非wenwen域的登录需要proxy跳转（ptlogin有referrer判断）
+     * 需要扩展其他域名的话，需要后台同学在wenwen域下实现proxy(建议在/login/sso/proxy/pc扩展即可)
+     * @param {string} domain - 当前业务线的域名
+     * @returns {string}
+     */
+    static generateLoginUrl(domain) {
+        switch (domain) {
+            case "ld.sogou.com":
+                return "http://wenwen.sogou.com/login/sso/proxy/pc?s=" +
+                    encodeURIComponent(getPTLoginURL(config.loginReturnUrl));
+            case "zhinan.sogou.com":
+                return "http://wenwen.sogou.com/login/sso/proxy/pc?s=" +
+                    encodeURIComponent(getPTLoginURL(config.loginReturnUrl));
+            default:
+                return getPTLoginURL(config.loginReturnUrl);
+        }
+    }
+
+    /**
+     * 合成注销登录的URL
+     * @param {string} domain - 当前业务线的域名
+     * @returns {string}
+     */
+    static generateLoginOutUrl(domain){
+        switch (domain) {
+            case "ld.sogou.com":
+                return 'http://wenwen.sogou.com/login/popLogout';
+            case "zhinan.sogou.com":
+                return '/guide/logout';
+            default:
+                return '/login/popLogout';
+        }
+    }
+
+    /**
+     * 检测登录态的URL
+     * @param {string} domain - 当前业务线的域名
+     * @returns {string}
+     */
+    static ajaxLoginStateUrl(domain){
+        switch (domain) {
+            case "ld.sogou.com":
+                return '/login/ld-loginState';
+            case "zhinan.sogou.com":
+                return '/guide/login';
+            default:
+                return '/login/loginState';
+        }
+    }
+
+    /**
+     * 执行登录操作
+     * @param {function} callback - 用户登录后的回调操作，也可跳转到指定的url
+     */
+    doLogin(callback) {
+        this.openLoginDialog(Login.generateLoginUrl(this.domain));
+
+        let key = this.callbackList.length;
+        if (typeof callback === "function") {
+            this.callbackList[key] = callback;
+        } else if (typeof callback === "string") {
+            this.callbackList[key] = function () {
+                location.href = callback;
+            }
+        }
+    }
+
+    /**
+     * 执行注销登录操作
+     * 1、注销PTLogin的登录
+     * 2、删除.sogou.com域下的p_skey, p_uin或者sg_lu, sg_mu
+     * @param {function} callback - 退出登录后的callback操作，默认会进行页面刷新
+     */
+    doLoginOut(callback) {
+        let url = Login.generateLoginOutUrl(this.domain);
+        doLoginOut(url, callback);
+    }
+
+    /**
+     * 打开登录弹框
+     * @param {string} url - 登陆框Iframe的src地址
+     */
+    openLoginDialog(url) {
+        this.loginDialog = new LoginDialog(url);
+    }
+
+    /**
+     * 登录后Iframe回跳到/login/popLogin
+     * popLogin和调用页进行登录信息和弹窗关闭的通信
+     * 然后调用autoCloseLoginDialog关闭登录框, 因此调用关闭登录框的页面是在popLogin页面
+     */
+    autoCloseLoginDialog() {
+        this.loginDialog.close();
+        let callbackList = this.callbackList;
+        if (callbackList &amp;&amp; callbackList.length) {
+            for(let i = 0, cbLen = callbackList.length; i &lt; cbLen; i++){
+                let callback = this.callbackList[i];
+                if (callback &amp;&amp; typeof callback === "function") {
+                    callback();
+                }
+            }
+            //执行后清除回调
+            this.callbackList = [];
+        }
+    }
+
+    /**
+     * 检查登录态, 如果接口失败，则以未登录状态做回调
+     * @param {function} outCallback - 当前未登录回调
+     * @param {function} loginCallback - 当前已登录回调
+     */
+    checkLoginState(outCallback, loginCallback) {
+        let url = Login.ajaxLoginStateUrl(this.domain);
+        $.ajax({
+            url: url,
+            type: 'POST',
+            cache: false,
+            dataType: "json",
+            success: function (data) {
+                if (data &amp;&amp; data.code == 1 || data == 1) {
+                    if(typeof outCallback === "function"){
+                        loginCallback();
+                    }
+                } else if (data &amp;&amp; data.code == 0 || data == 0) {
+                    if(typeof outCallback === "function"){
+                        outCallback();
+                    }
+                }
+            },
+            error: function () {
+                if(typeof outCallback === "function"){
+                    outCallback();
+                }
+            }
+        });
+    }
+
+    /**
+     * 确保用户登录后
+     * 执行回调, 如果用户没有登录
+     * 会调用登录操作，然后执行回调， 用户已登录则直接执行回调
+     * @param {function} callback - 回调函数
+     */
+    insureLoginAction(callback) {
+        this.checkLoginState(()=> {
+            this.doLogin(callback);
+        }, ()=> {
+            callback();
+        });
+    }
+
+    /**
+     * 登录之后需要执行回调函数时可以用这个方法，例如：登录后自动更新头部信息
+     * @param {function} callback - 回调函数
+     * @example
+     * WKSSO.appendCallbackList(callback);   //callback为登录之后需要执行的回调函数
+     */
+    appendCallbackList(callback) {
+        if (callback &amp;&amp; typeof callback === "function") {
+            this.callbackList.push(callback)
+        }
+    }
+}
+
+/**
+ * 获取Login实例的工厂方法
+ * 采用单例模式，保证整个页面下获取的Login是唯一实例
+ * @function
+ * @param {string} type - 生成登录实例的域名
+ */
+export let pcCreateLoginFactory = (function () {
+    let instance = null;
+    return function (domain) {
+        if(!domain){
+            domain = document.domain;//.sogou.com
+        }
+
+        if(domain.indexOf("ld.sogou.com") > -1){
+            domain = "ld.sogou.com";
+        }else if(domain.indexOf("zhinan.sogou.com") > -1){
+            domain = "zhinan.sogou.com";
+        }else if(domain.indexOf("wenwen.qq.com") > -1){
+            domain = "wenwen.qq.com";
+        } else {
+            domain = "wenwen.sogou.com";
+        }
+
+        if (!instance) {
+            instance = new Login(domain);
+        }
+        return instance;
+    }
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Feb 16 2017 16:10:59 GMT+0800 (中国标准时间) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
